@@ -19,16 +19,16 @@ var interval time.Duration
 
 func main() {
 
-	var rootCmd = &cobra.Command{Use: "app",
+	var rootCmd = &cobra.Command{Use: "lms-control",
 		Short: "says hello",
-		Long:  `This subcommand says hello`,
+		Long:  "Application to limit volume of players connected to a Logitech Mediaserver by timetable",
 		Run:   run,
 	}
 
-	rootCmd.Flags().StringVarP(&timeTable, "time-table", "t", "", "Comma seperated list of time table entries")
+	rootCmd.Flags().StringVarP(&timeTable, "timetable", "t", "", "Comma seperated list of timetable entries (e.g. 22:00:00=20,23:00:00=15,00:00:00=0,05:30=)")
 	rootCmd.MarkFlagRequired("time-table")
-	rootCmd.Flags().StringVarP(&host, "lms", "l", "localhost", "Hostname of the lms server")
-	rootCmd.MarkFlagRequired("host")
+	rootCmd.Flags().StringVarP(&host, "lms", "l", "", "Hostname of the lms server")
+	rootCmd.MarkFlagRequired("lms")
 	rootCmd.Flags().IntVarP(&port, "port", "p", 9090, "Port of the lms telnet interface")
 	rootCmd.Flags().DurationVarP(&interval, "interval", "i", 1*time.Second, "Duration between 2 checks")
 
