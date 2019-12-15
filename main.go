@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -47,9 +46,6 @@ func run(cmd *cobra.Command, args []string) {
 	signal.Notify(sigchan, os.Interrupt, syscall.SIGTERM)
 
 	exit := make(chan bool)
-
-	vol, _ := server.Players[1].GetPower()
-	fmt.Printf("%s -> %v\n", server.Players[1].Name, vol)
 
 	table := control.ParseTimeTable(timeTable)
 
