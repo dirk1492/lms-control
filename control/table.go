@@ -10,9 +10,9 @@ import (
 )
 
 type TimeTableEntry struct {
-	start time.Time
-	stop  time.Time
-	max   int
+	start   time.Time
+	seconds int
+	max     int
 }
 
 type TimeTable struct {
@@ -49,15 +49,30 @@ func (t *TimeTable) add(txt string, max string) {
 		return
 	}
 
+	seconds := 60*60*tx.Hour() + 60*tx.Minute() + tx.Second()
+
 	if len(max) == 0 {
-		t.table = append(t.table, TimeTableEntry{start: tx, max: 100})
+		t.table = append(t.table, TimeTableEntry{start: tx, seconds: seconds, max: 100})
 	} else {
 		val, err := strconv.Atoi(max)
 		if err != nil {
 			log.Printf("Error parsing max value '%s': %v", txt, err)
 		}
-		t.table = append(t.table, TimeTableEntry{start: tx, max: val})
+		t.table = append(t.table, TimeTableEntry{start: tx, seconds: seconds, max: val})
 	}
+}
+
+func (t *TimeTable) now() *TimeTableEntry {
+	tt := time.Now()
+	seconds := 60*60*tt.Hour() + 60*tt.Minute() + tt.Second()
+
+	for _, v := range t.table {
+		if seconds > v.seconds {
+			return &v
+		}
+	}
+
+	return nil
 }
 
 func (t *TimeTable) String() string {
@@ -65,8 +80,9 @@ func (t *TimeTable) String() string {
 
 	sb.WriteString("Time table:\n")
 
-	for i, v := range t.table {
-		sb.WriteString(fmt.Sprintf("%-2v %v => %v\n", i, v.start.Format("15:04:00"), v.max))
+	for i := len(t.table) - 1; i >= 0; i-- {
+		v := t.table[i]
+		sb.WriteString(fmt.Sprintf("%-2v %v => %v\n", len(t.table)-i, v.start.Format("15:04:00"), v.max))
 	}
 
 	return sb.String()
@@ -77,7 +93,7 @@ func (t TimeTable) Len() int {
 }
 
 func (t TimeTable) Less(i, j int) bool {
-	return t.table[i].start.Before(t.table[j].start)
+	return t.table[j].start.Before(t.table[i].start)
 }
 
 func (t TimeTable) Swap(i, j int) {

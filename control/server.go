@@ -55,7 +55,7 @@ func Connect(host string, port int) (*Server, error) {
 }
 
 func (s *Server) Close() {
-	if s.conn != nil {
+	if s != nil && s.conn != nil {
 		s.conn.Close()
 		s.conn = nil
 	}
@@ -261,6 +261,11 @@ func (s *Server) getPlayer(count int) []Player {
 }
 
 func (s *Server) Check(timeTable *TimeTable) {
+	entry := timeTable.now()
+
+	for _, p := range s.Players {
+		p.Check(entry)
+	}
 }
 
 func (s *Server) String() string {
