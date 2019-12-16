@@ -15,6 +15,10 @@ type TimeTableEntry struct {
 	max     int
 }
 
+func (t *TimeTableEntry) copy() TimeTableEntry {
+	return TimeTableEntry{start: t.start, seconds: t.seconds, max: t.max}
+}
+
 type TimeTable struct {
 	table []TimeTableEntry
 }
@@ -22,13 +26,26 @@ type TimeTable struct {
 func ParseTimeTable(txt string) *TimeTable {
 	table := TimeTable{}
 
-	parts := strings.Split(txt, ",")
-	for _, p := range parts {
-		kv := strings.Split(p, "=")
-		if len(kv) == 2 {
-			table.add(kv[0], kv[1])
-		} else if len(kv) == 1 {
-			table.add(kv[0], "")
+	if len(txt) > 0 {
+		parts := strings.Split(txt, ",")
+		for _, p := range parts {
+			kv := strings.Split(p, "=")
+			if len(kv) == 2 {
+				table.add(kv[0], kv[1])
+			} else if len(kv) == 1 {
+				table.add(kv[0], "")
+			}
+		}
+	}
+
+	if table.length() == 0 {
+		table.add("00:00", "100")
+	} else if table.first().seconds != 0 {
+		last := table.last()
+		if last != nil {
+			table.add("00:00", strconv.Itoa(last.max))
+		} else {
+			table.add("00:00", "100")
 		}
 	}
 
@@ -59,6 +76,30 @@ func (t *TimeTable) add(txt string, max string) {
 			log.Printf("Error parsing max value '%s': %v", txt, err)
 		}
 		t.table = append(t.table, TimeTableEntry{start: tx, seconds: seconds, max: val})
+	}
+}
+
+func (t *TimeTable) length() int {
+	return len(t.table)
+}
+
+func (t *TimeTable) last() *TimeTableEntry {
+	l := len(t.table)
+
+	if l == 0 {
+		return nil
+	} else {
+		return &t.table[0]
+	}
+}
+
+func (t *TimeTable) first() *TimeTableEntry {
+	l := len(t.table)
+
+	if l == 0 {
+		return nil
+	} else {
+		return &t.table[l-1]
 	}
 }
 
