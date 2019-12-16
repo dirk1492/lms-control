@@ -38,6 +38,8 @@ func ParseTimeTable(txt string) *TimeTable {
 		}
 	}
 
+	sort.Sort(table)
+
 	if table.length() == 0 {
 		table.add("00:00", "100")
 	} else if table.first().seconds != 0 {
@@ -48,8 +50,6 @@ func ParseTimeTable(txt string) *TimeTable {
 			table.add("00:00", "100")
 		}
 	}
-
-	sort.Sort(table)
 
 	return &table
 }
