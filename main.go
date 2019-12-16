@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -11,10 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var timeTable string
-var host string
-var port int
-var interval time.Duration
+var (
+	timeTable string
+	host      string
+	port      int
+	interval  time.Duration
+)
 
 func main() {
 
@@ -24,17 +28,24 @@ func main() {
 		Run:   run,
 	}
 
-	rootCmd.Flags().StringVarP(&timeTable, "timetable", "t", "", "Comma seperated list of timetable entries (e.g. 22:00:00=20,23:00:00=15,00:00:00=0,05:30=)")
-	rootCmd.MarkFlagRequired("time-table")
+	rootCmd.Flags().StringVarP(&timeTable, "timetable", "t", "", "Comma separated list of timetable entries (e.g. 22:00:00=20,23:00:00=15,00:00:00=0,05:30=100)")
 	rootCmd.Flags().StringVarP(&host, "lms", "l", "", "Hostname of the lms server")
-	rootCmd.MarkFlagRequired("lms")
 	rootCmd.Flags().IntVarP(&port, "port", "p", 9090, "Port of the lms telnet interface")
 	rootCmd.Flags().DurationVarP(&interval, "interval", "i", 1*time.Second, "Duration between 2 checks")
 
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }
 
 func run(cmd *cobra.Command, args []string) {
+
+	timeTable = getEnv("TIMETABLE", timeTable)
+	host = getEnv("LMS_SERVER", host)
+	port = getInt("LMS_PORT", port)
+	interval = getDuration("INTERVAL", interval)
+
 	server, _ := control.Connect(host, port)
 	defer server.Close()
 
@@ -64,4 +75,40 @@ func run(cmd *cobra.Command, args []string) {
 
 	<-exit
 
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		log.Printf("Set env var %v='%v'", key, value)
+		return value
+	}
+	return fallback
+}
+
+func getInt(key string, fallback int) int {
+	if value, ok := os.LookupEnv(key); ok {
+		val, err := strconv.Atoi(value)
+		if err == nil {
+			log.Printf("Set env var %v='%v'", key, val)
+			return val
+		} else {
+			log.Printf("Parse env var %v failed: %v", key, err)
+			return fallback
+		}
+	}
+	return fallback
+}
+
+func getDuration(key string, fallback time.Duration) time.Duration {
+	if value, ok := os.LookupEnv(key); ok {
+		val, err := time.ParseDuration(value)
+		if err == nil {
+			log.Printf("Set env var %v='%v'", key, val)
+			return val
+		} else {
+			log.Printf("Parse env var %v failed: %v", key, err)
+			return fallback
+		}
+	}
+	return fallback
 }
