@@ -22,6 +22,15 @@ var (
 
 func main() {
 
+	// manually set time zone
+	if tz := os.Getenv("TZ"); tz != "" {
+		var err error
+		time.Local, err = time.LoadLocation(tz)
+		if err != nil {
+			log.Printf("error loading location '%s': %v\n", tz, err)
+		}
+	}
+
 	var rootCmd = &cobra.Command{Use: "lms-control",
 		Short: "says hello",
 		Long:  "Application to limit volume of players connected to a Logitech Mediaserver by timetable",
@@ -69,6 +78,8 @@ func run(cmd *cobra.Command, args []string) {
 				exit <- true
 			case <-time.After(interval):
 				server.Check(table)
+			case <-time.After(300 * time.Second):
+				server.UpdatePlayerList()
 			}
 		}
 	}()

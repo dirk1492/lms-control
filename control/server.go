@@ -24,7 +24,7 @@ type Server struct {
 	Genres   int
 	Songs    int
 	Duration float64
-	Players  []Player
+	Players  *PlayerList
 
 	conn net.Conn
 }
@@ -124,10 +124,10 @@ func (s *Server) init() {
 								log.Printf("Error parse info total duration: %v", err)
 							}
 						case "player count":
-							val, err := strconv.Atoi(kv[1])
-							if err == nil {
-								s.Players = s.getPlayer(val)
-							}
+							//val, err := strconv.Atoi(kv[1])
+							//if err == nil {
+							s.Players = NewPlayerList(s)
+							//}
 						}
 					}
 				}
@@ -227,45 +227,61 @@ func (s *Server) set(q string, val interface{}) (string, error) {
 	return dp[idx:], nil
 }
 
-func (s *Server) getPlayer(count int) []Player {
-	var rc []Player
-
-	for i := 0; i < count; i++ {
-		id, err := s.query(fmt.Sprintf("player id %v ?", i))
-		if err != nil {
-			continue
-		}
-
-		uuid, err := s.query(fmt.Sprintf("player uuid %v ?", i))
-		if err != nil {
-			continue
-		}
-
-		name, err := s.query(fmt.Sprintf("player name %v ?", i))
-		if err != nil {
-			continue
-		}
-
-		player := Player{
-			Index:  i,
-			ID:     id,
-			UUID:   uuid,
-			Name:   name,
-			server: s,
-		}
-
-		rc = append(rc, player)
+func (s *Server) getPlayerCount() int {
+	resp, err := s.query("player count ?")
+	if err != nil {
+		log.Printf("Error read player count: %v\n", err)
+		return -1
 	}
 
-	return rc
+	cnt, err := strconv.Atoi(resp)
+	if err != nil {
+		log.Printf("Error parse player count: %v -> %v\n", resp, err)
+		return -1
+	}
+
+	return cnt
+}
+
+func (s *Server) getPlayer(index int) *Player {
+
+	id, err := s.query(fmt.Sprintf("player id %v ?", index))
+	if err != nil {
+		log.Printf("Error read player%v id: %v\n", index, err)
+		return nil
+	}
+
+	uuid, err := s.query(fmt.Sprintf("player uuid %v ?", index))
+	if err != nil {
+		log.Printf("Error read player%v uuid: %v\n", index, err)
+		return nil
+	}
+
+	name, err := s.query(fmt.Sprintf("player name %v ?", index))
+	if err != nil {
+		log.Printf("Error read player%v name: %v\n", index, err)
+		return nil
+	}
+
+	return &Player{
+		Index:  index,
+		ID:     id,
+		UUID:   uuid,
+		Name:   name,
+		server: s,
+	}
 }
 
 func (s *Server) Check(timeTable *TimeTable) {
 	entry := timeTable.now()
 
-	for _, p := range s.Players {
-		p.Check(entry)
-	}
+	s.Players.foreach(func(player *Player) {
+		player.Check(entry)
+	})
+}
+
+func (s *Server) UpdatePlayerList() {
+	s.Players.update()
 }
 
 func (s *Server) String() string {
@@ -282,9 +298,9 @@ func (s *Server) String() string {
 	sb.WriteString(fmt.Sprintf("Duration:	%v\n", s.Duration))
 	sb.WriteString(fmt.Sprintf("Players:	\n"))
 
-	for _, p := range s.Players {
-		sb.WriteString(fmt.Sprintf("%s\n", p.String()))
-	}
+	s.Players.foreach(func(player *Player) {
+		sb.WriteString(fmt.Sprintf("%s\n", player.String()))
+	})
 
 	return sb.String()
 }
