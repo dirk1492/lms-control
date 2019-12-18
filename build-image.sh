@@ -9,4 +9,4 @@ if [ -z "$(docker buildx ls | grep 'linux/arm64')" ]; then
 fi
 
 docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --push -t dil001/lms-control .
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --push -t dil001/lms-control:$VERSION .
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --push -t dil001/lms-control:v$VERSION .
