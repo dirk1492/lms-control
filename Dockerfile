@@ -23,4 +23,6 @@ COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.
 COPY --from=0 /usr/local/go/lib/time/zoneinfo.zip /
 ENV TZ=Pacific/Auckland
 ENV ZONEINFO=/zoneinfo.zip
+COPY passwd /etc/passwd
+USER nobody
 CMD ["/lms-control"]
