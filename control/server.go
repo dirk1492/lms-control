@@ -276,7 +276,9 @@ func (s *Server) Check(timeTable *TimeTable) {
 	entry := timeTable.now()
 
 	s.Players.foreach(func(player *Player) {
-		player.Check(entry)
+		if player != nil {
+			player.Check(entry)
+		}
 	})
 }
 

@@ -31,7 +31,9 @@ func (p *PlayerList) update() {
 	p.mux.Lock()
 	defer p.mux.Unlock()
 
-	p.list = list
+	if len(list) > 0 {
+		p.list = list
+	}
 }
 
 func (p *PlayerList) foreach(f PlayerFunc) {
