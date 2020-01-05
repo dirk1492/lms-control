@@ -108,12 +108,12 @@ func (t *TimeTable) now() *TimeTableEntry {
 	seconds := 60*60*tt.Hour() + 60*tt.Minute() + tt.Second()
 
 	for _, v := range t.table {
-		if seconds > v.seconds {
+		if seconds >= v.seconds {
 			return &v
 		}
 	}
 
-	return nil
+	return &t.table[0]
 }
 
 func (t *TimeTable) String() string {
