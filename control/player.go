@@ -66,16 +66,15 @@ func (p *Player) Check(entry *TimeTableEntry) {
 	if err == nil && power {
 		vol, err := p.GetVolume()
 		if err == nil {
-			if vol > entry.max {
-				log.Printf("Set volume of player %v to %v", p.Name, entry.max)
-				p.SetVolume(entry.max)
-			} else if entry.max == 0 {
+			if entry.max == 0 {
 				log.Printf("Switch player %v off", p.Name)
 				p.SetPower(false)
+			} else if vol > entry.max {
+				log.Printf("Set volume of player %v from %v to %v", p.Name, vol, entry.max)
+				p.SetVolume(entry.max)
 			}
 		}
 	}
-
 }
 
 func (p *Player) conv(b bool) int {
