@@ -4,11 +4,10 @@ RUN apk update && apk add gcc musl-dev upx ca-certificates dep git
 
 COPY control/*.go /go/src/github.com/dirk1492/lms-control/control/
 COPY *.go /go/src/github.com/dirk1492/lms-control/
-COPY Gopkg.* /go/src/github.com/dirk1492/lms-control/
+COPY go.* /go/src/github.com/dirk1492/lms-control/
 
 WORKDIR /go/src/github.com/dirk1492/lms-control
 
-RUN dep ensure
 RUN go build -ldflags "-linkmode external -extldflags -static -s -w" -o lms-control
 RUN upx lms-control
 
